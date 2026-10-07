@@ -195,7 +195,7 @@ export const suppliers = [
 
 export const normalizeSearch = (value, type) => {
   const normalized = value.normalize('NFKC').trim().replace(/\s+/g, ' ');
-  return type === 'oem' ? normalized.toUpperCase() : normalized;
+  if (type === 'vin') return normalized.replace(/[\s-]/g, '').toUpperCase(); return type === 'oem' ? normalized.toUpperCase() : normalized;
 };
 
 export const buildSupplierUrl = (supplier, query, condition) =>
