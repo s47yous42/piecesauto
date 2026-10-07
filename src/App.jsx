@@ -7,6 +7,7 @@ const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
   { id: 'plate', label: 'Immatriculation', icon: '▤' },
   { id: 'vin', label: 'N° VIN', icon: '⌗' },
+  { id: 'model', label: 'Modèle / année', icon: '🚘' },
 ];
 
 const conditions = [
@@ -19,7 +20,7 @@ function App() {
   const [searchType, setSearchType] = useState('oem');
   const [condition, setCondition] = useState('all');
   const [country, setCountry] = useState('all');
-  const [inputs, setInputs] = useState({ oem: '', plate: '', vin: '' });
+  const [inputs, setInputs] = useState({ oem: '', plate: '', vin: '', model: '', year: '' });
   const input = inputs[searchType];
   const setInput = (value) => setInputs((previous) => ({ ...previous, [searchType]: value }));
   const [submittedSearch, setSubmittedSearch] = useState('');
@@ -55,7 +56,7 @@ function App() {
 
   const submitSearch = (event) => {
     event.preventDefault();
-    const prepared = prepareSearch({ type: searchType, input, vehicle, part });
+    const prepared = prepareSearch({ type: searchType, input, vehicle, part, year: inputs.year || '' });
     setVinDetails(searchType === 'vin' && prepared.vin ? prepared : null);
     setCopyStatus('');
     if (prepared.error) {
@@ -246,14 +247,16 @@ function App() {
                   ? 'Numéro VIN du véhicule'
                   : searchType === 'plate'
                     ? 'Immatriculation du véhicule'
-                    : 'Référence OEM ou description'}
+                    : searchType === 'model'
+                      ? 'Marque et modèle du véhicule'
+                      : 'Référence OEM ou description'}
               </label>
               <div className="input-row">
                 <span className="input-icon" aria-hidden="true">⌕</span>
                 <input
                   id="part-search"
                   value={input}
-                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); setError(''); if (searchType !== 'oem') setVehicle(''); }}
+                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); setError(''); if (searchType === 'plate' || searchType === 'vin') setVehicle(''); }}
                   autoCapitalize={searchType === 'vin' ? 'characters' : 'none'}
                   spellCheck={false}
                   placeholder={
@@ -261,7 +264,9 @@ function App() {
                       ? 'Ex. WVWZZZ1JZXW000001'
                       : searchType === 'plate'
                         ? 'Ex. AB-123-CD'
-                        : 'Ex. 8200 123 456 ou alternateur Clio 4'
+                        : searchType === 'model'
+                          ? 'Ex. Renault Clio IV'
+                          : 'Ex. 8200 123 456 ou alternateur Clio 4'
                   }
                 />
                 <button className="search-button" type="submit">
@@ -280,7 +285,28 @@ function App() {
                   {copyStatus && <p role="status">{copyStatus}</p>}
                 </div>
               )}
-              {searchType !== 'oem' && (
+              {searchType === 'model' && (
+                <div className="vin-fields model-fields">
+                  <label htmlFor="model-year">Année du véhicule
+                    <input
+                      id="model-year"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={inputs.year || ''}
+                      onChange={(event) => {
+                        setInputs((previous) => ({ ...previous, year: event.target.value }));
+                        setSubmittedSearch('');
+                        setError('');
+                      }}
+                      placeholder="Ex. 2016"
+                    />
+                  </label>
+                  <label htmlFor="model-part">Pièce ou référence OEM
+                    <input id="model-part" value={part} onChange={(event) => { setPart(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. alternateur ou référence constructeur" />
+                  </label>
+                </div>
+              )}
+              {searchType !== 'oem' && searchType !== 'model' && (
                 <div className="vin-fields">
                   <label htmlFor="vin-vehicle">Modèle et motorisation
                     <input id="vin-vehicle" value={vehicle} onChange={(event) => { setVehicle(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. Renault Clio IV 1.5 dCi 90, 2016" />
@@ -297,7 +323,9 @@ function App() {
                 ? 'VIN : case E de la carte grise, 17 caractères sans I, O ni Q. Espaces et tirets sont supprimés automatiquement.'
                 : searchType === 'plate'
                   ? 'La plaque reste dans cette page. Copiez-la chez le marchand pour identifier le véhicule, puis indiquez la pièce recherchée.'
-                  : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
+                  : searchType === 'model'
+                    ? 'Saisissez la marque, le modèle, l’année et la pièce. Ajoutez la motorisation dans la description du modèle pour affiner les résultats.'
+                    : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
             </div>
             {searchType === 'vin' && (
               <div className="vin-help">
@@ -401,11 +429,12 @@ function App() {
             </button>
           ))}
         </div>
+        <p className="price-note">Les prix et frais de livraison ne sont pas récupérés ici : ouvrez plusieurs vendeurs pour comparer le coût total et la disponibilité.</p>
 
         {!submittedSearch ? (
           <div className="empty-state">
             <span className="empty-icon" aria-hidden="true">⌕</span>
-            <p>Entrez une référence, une description, une immatriculation ou un VIN pour préparer vos liens de recherche.</p>
+            <p>Entrez une référence, une description, une immatriculation, un VIN ou un modèle avec son année pour préparer vos liens de recherche.</p>
           </div>
         ) : (
           <>

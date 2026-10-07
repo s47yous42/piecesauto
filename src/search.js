@@ -11,10 +11,21 @@ export function inspectPlate(value) {
   return { plate };
 }
 
-export function prepareSearch({ type, input, vehicle = '', part = '' }) {
+export function prepareSearch({ type, input, vehicle = '', part = '', year = '' }) {
   if (type === 'oem') {
     const query = normalizeSearch(input, type);
     return query ? { query } : { error: 'Saisissez une référence ou une description de la pièce.' };
+  }
+  if (type === 'model') {
+    if (!input.trim()) return { error: 'Saisissez la marque et le modèle du véhicule.' };
+    if (!part.trim()) return { error: 'Précisez la pièce ou la référence OEM recherchée.' };
+    if (!/^\d{4}$/.test(year)) return { error: 'Saisissez une année au format AAAA, par exemple 2016.' };
+    const numericYear = Number(year);
+    if (numericYear < 1886 || numericYear > new Date().getFullYear() + 1) {
+      return { error: 'Saisissez une année comprise entre 1886 et l’année prochaine.' };
+    }
+    const model = input.trim().replace(/\s+/g, ' ');
+    return { query: buildVinPartsQuery(part, `${model} ${year}`), model, year };
   }
   const identity = type === 'vin' ? inspectVin(input) : inspectPlate(input);
   if (identity.error) return identity;

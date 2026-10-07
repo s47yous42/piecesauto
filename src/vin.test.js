@@ -15,6 +15,19 @@ test('description, plate and VIN searches prepare the requested piece', () => {
   }
 });
 
+test('model searches require and include the make, model, year and requested part', () => {
+  const result = prepareSearch({ type: 'model', input: ' Renault   Clio IV ', year: '2016', part: ' alternateur ' });
+  assert.equal(result.query, 'alternateur Renault Clio IV 2016');
+  assert.equal(result.model, 'Renault Clio IV');
+  assert.equal(result.year, '2016');
+
+  assert.match(prepareSearch({ type: 'model', input: '', year: '2016', part: 'alternateur' }).error, /marque et le modèle/);
+  assert.match(prepareSearch({ type: 'model', input: 'Renault Clio IV', year: '2016', part: '' }).error, /pièce/);
+  for (const year of ['', '16', 'abcd', '1885', String(new Date().getFullYear() + 2)]) {
+    assert.ok(prepareSearch({ type: 'model', input: 'Renault Clio IV', year, part: 'alternateur' }).error, year);
+  }
+});
+
 test('plate normalization accepts common separators without claiming vehicle identification', () => {
   assert.deepEqual(inspectPlate(' ab-123 cd '), { plate: 'AB-123-CD' });
   assert.deepEqual(inspectPlate('1234 AB 75'), { plate: '1234AB75' });

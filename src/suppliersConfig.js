@@ -5,7 +5,11 @@ const conditionTerms = {
   fr: { new: 'neuf', used: 'occasion' },
   de: { new: 'neu', used: 'gebraucht' },
   it: { new: 'nuovo', used: 'usato' },
-  es: { new: 'nuevo', used: 'usado' },   nl: { new: 'nieuw', used: 'tweedehands' },   pl: { new: 'nowe', used: 'używane' },   at: { new: 'neu', used: 'gebraucht' },   be: { new: 'neuf', used: 'occasion' },
+  es: { new: 'nuevo', used: 'usado' },
+  nl: { new: 'nieuw', used: 'tweedehands' },
+  pl: { new: 'nowe', used: 'używane' },
+  at: { new: 'neu', used: 'gebraucht' },
+  be: { new: 'neuf', used: 'occasion' },
 };
 
 const withCondition = (query, condition, country) =>
@@ -28,12 +32,42 @@ const ebaySupplier = (country, market, description) => ({
   },
 });
 
-const autodocSupplier = (country, countryLabel, domain) => ({ id: `autodoc-${country}`, name: 'AUTODOC', description: `Pièces neuves avec catalogue ${countryLabel.toLowerCase()}`, category: 'Neuf', conditions: ['new'], country, countryLabel, color: 'red', searchUrl: (query, condition) => `https://${domain}/search?keyword=${encodeURIComponent(withCondition(query, condition, country))}` }); const siteSearchSupplier = (id, name, description, category, conditions, country, countryLabel, color, domain) => ({ id, name, description, category, conditions, country, countryLabel, color, searchUrl: (query, condition) => searchOnSite(domain, withCondition(query, condition, country)), searchVia: 'recherche web ciblée' }); export const countries = [
+const autodocSupplier = (country, countryLabel, domain) => ({
+  id: `autodoc-${country}`,
+  name: 'AUTODOC',
+  description: `Pièces neuves avec catalogue ${countryLabel.toLowerCase()}`,
+  category: 'Neuf',
+  conditions: ['new'],
+  country,
+  countryLabel,
+  color: 'red',
+  searchUrl: (query, condition) =>
+    `https://${domain}/search?keyword=${encodeURIComponent(withCondition(query, condition, country))}`,
+});
+
+const siteSearchSupplier = (id, name, description, category, conditions, country, countryLabel, color, domain) => ({
+  id,
+  name,
+  description,
+  category,
+  conditions,
+  country,
+  countryLabel,
+  color,
+  searchUrl: (query, condition) => searchOnSite(domain, withCondition(query, condition, country)),
+  searchVia: 'recherche web ciblée',
+});
+
+export const countries = [
   { id: 'all', label: 'Toute l’Europe' },
   { id: 'fr', label: 'France' },
   { id: 'de', label: 'Allemagne' },
   { id: 'it', label: 'Italie' },
-  { id: 'es', label: 'Espagne' }, { id: 'nl', label: 'Pays-Bas' }, { id: 'pl', label: 'Pologne' }, { id: 'at', label: 'Autriche' }, { id: 'be', label: 'Belgique' },
+  { id: 'es', label: 'Espagne' },
+  { id: 'nl', label: 'Pays-Bas' },
+  { id: 'pl', label: 'Pologne' },
+  { id: 'at', label: 'Autriche' },
+  { id: 'be', label: 'Belgique' },
 ];
 
 export const suppliers = [
@@ -190,12 +224,25 @@ export const suppliers = [
       searchOnSite('endado.com', withCondition(query, condition, country)),
     searchVia: 'recherche web ciblée',
   },
-  ebaySupplier('es', 'Espagne', 'Annonces espagnoles, pièces neuves et d’occasion'), autodocSupplier('nl', 'Pays-Bas', 'www.autodoc.nl'), siteSearchSupplier('winparts', 'Winparts', 'Spécialiste néerlandais de pièces auto', 'Neuf', ['new'], 'nl', 'Pays-Bas', 'teal', 'winparts.nl'), ebaySupplier('nl', 'Pays-Bas', 'Annonces néerlandaises, pièces neuves et d’occasion'), autodocSupplier('pl', 'Pologne', 'www.autodoc.pl'), siteSearchSupplier('iparts-pl', 'iParts', 'Catalogue polonais de pièces automobiles', 'Neuf', ['new'], 'pl', 'Pologne', 'navy', 'iparts.pl'), siteSearchSupplier('allegro-pl', 'Allegro', 'Place de marché polonaise, pièces neuves et d’occasion', 'Neuf & occasion', ['new', 'used'], 'pl', 'Pologne', 'yellow', 'allegro.pl'), autodocSupplier('at', 'Autriche', 'www.autodoc.at'), siteSearchSupplier('daparto-at', 'DAPARTO', 'Comparateur de pièces auto pour l’Autriche', 'Neuf', ['new'], 'at', 'Autriche', 'navy', 'daparto.at'), ebaySupplier('at', 'Autriche', 'Annonces autrichiennes, pièces neuves et d’occasion'), autodocSupplier('be', 'Belgique', 'www.autodoc.be'), siteSearchSupplier('mister-auto-be', 'Mister-Auto', 'Pièces neuves et équipement automobile', 'Neuf', ['new'], 'be', 'Belgique', 'teal', 'mister-auto.be'), ebaySupplier('be', 'Belgique', 'Annonces belges, pièces neuves et d’occasion'),
+  ebaySupplier('es', 'Espagne', 'Annonces espagnoles, pièces neuves et d’occasion'),
+  autodocSupplier('nl', 'Pays-Bas', 'www.autodoc.nl'),
+  siteSearchSupplier('winparts', 'Winparts', 'Spécialiste néerlandais de pièces auto', 'Neuf', ['new'], 'nl', 'Pays-Bas', 'teal', 'winparts.nl'),
+  ebaySupplier('nl', 'Pays-Bas', 'Annonces néerlandaises, pièces neuves et d’occasion'),
+  autodocSupplier('pl', 'Pologne', 'www.autodoc.pl'),
+  siteSearchSupplier('iparts-pl', 'iParts', 'Catalogue polonais de pièces automobiles', 'Neuf', ['new'], 'pl', 'Pologne', 'navy', 'iparts.pl'),
+  siteSearchSupplier('allegro-pl', 'Allegro', 'Place de marché polonaise, pièces neuves et d’occasion', 'Neuf & occasion', ['new', 'used'], 'pl', 'Pologne', 'yellow', 'allegro.pl'),
+  autodocSupplier('at', 'Autriche', 'www.autodoc.at'),
+  siteSearchSupplier('daparto-at', 'DAPARTO', 'Comparateur de pièces auto pour l’Autriche', 'Neuf', ['new'], 'at', 'Autriche', 'navy', 'daparto.at'),
+  ebaySupplier('at', 'Autriche', 'Annonces autrichiennes, pièces neuves et d’occasion'),
+  autodocSupplier('be', 'Belgique', 'www.autodoc.be'),
+  siteSearchSupplier('mister-auto-be', 'Mister-Auto', 'Pièces neuves et équipement automobile', 'Neuf', ['new'], 'be', 'Belgique', 'teal', 'mister-auto.be'),
+  ebaySupplier('be', 'Belgique', 'Annonces belges, pièces neuves et d’occasion'),
 ];
 
 export const normalizeSearch = (value, type) => {
   const normalized = value.normalize('NFKC').trim().replace(/\s+/g, ' ');
-  if (type === 'vin') return normalized.replace(/[\s-]/g, '').toUpperCase(); return type === 'oem' ? normalized.toUpperCase() : normalized;
+  if (type === 'vin') return normalized.replace(/[\s-]/g, '').toUpperCase();
+  return type === 'oem' ? normalized.toUpperCase() : normalized;
 };
 
 export const buildSupplierUrl = (supplier, query, condition) =>

@@ -18,6 +18,18 @@ test('description generates encoded merchant searches and filters country and co
   await expect(page.locator('.supplier-link')).toHaveAttribute('rel', 'noopener noreferrer');
 });
 
+test('model and year searches send the part and vehicle details to merchant results', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Modèle / année' }).click();
+  await page.getByLabel('Marque et modèle du véhicule', { exact: true }).fill('Renault Clio IV');
+  await page.getByLabel('Année du véhicule', { exact: true }).fill('2016');
+  await page.getByLabel('Pièce ou référence OEM', { exact: true }).fill('alternateur');
+  await page.getByRole('button', { name: 'Trouver ma pièce' }).click();
+
+  await expect(page.locator('.query-summary')).toContainText('alternateur Renault Clio IV 2016');
+  const url = new URL(await page.locator('.supplier-link').first().getAttribute('href'));
+  expect([...url.searchParams.values()].join(' ')).toContain('alternateur Renault Clio IV 2016');
+});
+
 test('empty descriptions and unsafe-looking text are handled as plain text', async ({ page }) => {
   await page.getByRole('button', { name: 'Trouver ma pièce' }).click();
   await expect(page.getByRole('alert')).toContainText('description');
@@ -141,7 +153,7 @@ test('changing VIN cancels stale decoding and removes previous vehicle', async (
 
 test('mobile search modes remain usable without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
-  for (const mode of ['Immatriculation', 'N° VIN', 'Référence ou description']) {
+  for (const mode of ['Immatriculation', 'N° VIN', 'Référence ou description', 'Modèle / année']) {
     await page.getByRole('tab', { name: mode, exact: true }).click();
     await expect(page.getByRole('button', { name: 'Trouver ma pièce' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
