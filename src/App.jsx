@@ -176,7 +176,7 @@ function App() {
           </div>
           <span className="floating-spark spark-one">✳</span>
           <span className="floating-spark spark-two">✳</span>
-          <div className="floating-label">7 marchands<br /><strong>en un clic</strong></div>
+                    <div className="floating-label">{suppliers.length} marchands<br /><strong>en un clic</strong></div>
         </div>
       </section>
 
