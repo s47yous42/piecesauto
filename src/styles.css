@@ -179,6 +179,8 @@ h1 > span { color: #76917a; }
   .search-panel { padding: 20px 16px; }
   .panel-heading h2 { font-size: 18px; }
   .search-layout { grid-template-columns: 1fr; }
+  .search-main { min-width: 0; }
+  .search-tabs { flex-wrap: wrap; gap: 8px 14px; }
   .photo-box { display: grid; grid-template-columns: 1fr; }
   .photo-drop { min-height: 80px; }
   .input-row { height: auto; min-height: 48px; }

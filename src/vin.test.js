@@ -3,6 +3,32 @@ import assert from 'node:assert/strict';
 import { buildVinPartsQuery, inspectVin } from './vin.js';
 import { buildSupplierUrl, suppliers } from './suppliersConfig.js';
 import { decodeVin, parseDecodedVehicle } from './vinDecoder.js';
+import { inspectPlate, prepareSearch } from './search.js';
+
+test('description, plate and VIN searches prepare the requested piece', () => {
+  assert.equal(prepareSearch({ type: 'oem', input: ' alternateur  Clio 4 ' }).query, 'ALTERNATEUR CLIO 4');
+  for (const [type, input] of [['plate', 'ab 123 cd'], ['vin', 'VF7SBHMZ0EW554823']]) {
+    const result = prepareSearch({ type, input, part: 'filtre à huile', vehicle: 'Clio 1.5 dCi' });
+    assert.equal(result.query, 'filtre à huile Clio 1.5 dCi');
+    assert.ok(!result.query.includes(input));
+    assert.equal(result.error, undefined);
+  }
+});
+
+test('plate normalization accepts common separators without claiming vehicle identification', () => {
+  assert.deepEqual(inspectPlate(' ab-123 cd '), { plate: 'AB-123-CD' });
+  assert.deepEqual(inspectPlate('1234 AB 75'), { plate: '1234AB75' });
+  for (const plate of ['', '???', 'ABC', 'AB/123/CD']) assert.ok(inspectPlate(plate).error);
+});
+
+test('identity modes require both requested part and confirmed vehicle', () => {
+  for (const [type, input] of [['plate', 'AB123CD'], ['vin', 'VF7SBHMZ0EW554823']]) {
+    assert.ok(prepareSearch({ type, input }).error);
+    assert.ok(prepareSearch({ type, input, part: 'alternateur' }).error);
+    assert.ok(prepareSearch({ type, input: '?', vehicle: 'Clio', part: 'alternateur' }).error);
+  }
+  assert.ok(prepareSearch({ type: 'oem', input: '   ' }).error);
+});
 
 test('normalizes the article VIN and separates WMI, VDS and VIS', () => {
   assert.deepEqual(inspectVin(' vf7-sbhmz0 ew554823 '), {

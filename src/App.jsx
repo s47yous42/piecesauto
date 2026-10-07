@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildSupplierUrl, countries, normalizeSearch, suppliers } from './suppliersConfig.js';
-import { buildVinPartsQuery, inspectVin } from './vin.js';
+import { buildSupplierUrl, countries, suppliers } from './suppliersConfig.js';
+import { inspectPlate, prepareSearch } from './search.js';
 import VinDecoder from './VinDecoder.jsx';
 
 const searchTypes = [
@@ -19,11 +19,15 @@ function App() {
   const [searchType, setSearchType] = useState('oem');
   const [condition, setCondition] = useState('all');
   const [country, setCountry] = useState('all');
-  const [input, setInput] = useState('');
+  const [inputs, setInputs] = useState({ oem: '', plate: '', vin: '' });
+  const input = inputs[searchType];
+  const setInput = (value) => setInputs((previous) => ({ ...previous, [searchType]: value }));
   const [submittedSearch, setSubmittedSearch] = useState('');
   const [submittedType, setSubmittedType] = useState('oem');
   const [vinDetails, setVinDetails] = useState(null);
-  const [vehicle, setVehicle] = useState('');
+  const [vehicles, setVehicles] = useState({ plate: '', vin: '' });
+  const vehicle = vehicles[searchType] || '';
+  const setVehicle = (value) => setVehicles((previous) => ({ ...previous, [searchType]: value }));
   const [part, setPart] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const [image, setImage] = useState(null);
@@ -51,27 +55,15 @@ function App() {
 
   const submitSearch = (event) => {
     event.preventDefault();
-    const query = normalizeSearch(input, searchType);
-    if (!query) {
-      setError('Saisissez une référence, une description, une immatriculation ou un numéro VIN.');
+    const prepared = prepareSearch({ type: searchType, input, vehicle, part });
+    setVinDetails(searchType === 'vin' && prepared.vin ? prepared : null);
+    setCopyStatus('');
+    if (prepared.error) {
+      setError(prepared.error);
       setSubmittedSearch('');
       return;
     }
-    if (searchType === 'vin') {
-      const details = inspectVin(input);
-      setVinDetails(details.error ? null : details);
-      setCopyStatus('');
-      if (details.error || !vehicle.trim() || !part.trim()) {
-        setError(details.error || 'Précisez le modèle / motorisation et la pièce recherchée pour préparer les liens.');
-        setSubmittedSearch('');
-        return;
-      }
-      setInput(details.vin);
-      setSubmittedSearch(buildVinPartsQuery(part, vehicle));
-    } else {
-      setVinDetails(null);
-      setSubmittedSearch(query);
-    }
+    setSubmittedSearch(prepared.query);
     setError('');
     setSubmittedType(searchType);
   };
@@ -82,6 +74,17 @@ function App() {
       setCopyStatus('VIN copié : transmettez-le au vendeur pour confirmer la référence compatible.');
     } catch {
       setCopyStatus('Copie indisponible : sélectionnez le VIN affiché et copiez-le manuellement.');
+    }
+  };
+
+  const copyPlate = async () => {
+    const details = inspectPlate(input);
+    if (details.error) { setError(details.error); return; }
+    try {
+      await navigator.clipboard.writeText(details.plate);
+      setCopyStatus('Plaque copiée. Collez-la dans le formulaire d’identification Oscaro.');
+    } catch {
+      setCopyStatus(`Copie indisponible : copiez manuellement ${details.plate}.`);
     }
   };
 
@@ -160,7 +163,7 @@ function App() {
         .trim();
       if (!description) throw new Error('L’API n’a pas retourné de description exploitable.');
 
-      setInput(description);
+      setInputs((previous) => ({ ...previous, oem: description }));
       setSearchType('oem');
       setImageStatus(`Pièce reconnue : ${description}`);
       setSubmittedSearch('');
@@ -250,7 +253,7 @@ function App() {
                 <input
                   id="part-search"
                   value={input}
-                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); if (searchType === 'vin') setVehicle(''); }}
+                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); setError(''); if (searchType !== 'oem') setVehicle(''); }}
                   autoCapitalize={searchType === 'vin' ? 'characters' : 'none'}
                   spellCheck={false}
                   placeholder={
@@ -268,7 +271,16 @@ function App() {
               {searchType === 'vin' && (
                 <VinDecoder vin={input} onVehicle={(description) => { setVehicle(description); setSubmittedSearch(''); setError(''); }} />
               )}
-              {searchType === 'vin' && (
+              {searchType === 'plate' && (
+                <div className="vin-decoder">
+                  <strong>Identifier le véhicule avec la plaque</strong>
+                  <p>Pour une plaque française, utilisez le formulaire d’immatriculation Oscaro, puis reportez le modèle et la motorisation ici. L’identification par plaque se fait chez le marchand.</p>
+                  <button type="button" onClick={copyPlate}>Copier la plaque</button>{' '}
+                  <a href="https://www.oscaro.com/" target="_blank" rel="noopener noreferrer">Identifier chez Oscaro ↗</a>
+                  {copyStatus && <p role="status">{copyStatus}</p>}
+                </div>
+              )}
+              {searchType !== 'oem' && (
                 <div className="vin-fields">
                   <label htmlFor="vin-vehicle">Modèle et motorisation
                     <input id="vin-vehicle" value={vehicle} onChange={(event) => { setVehicle(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. Renault Clio IV 1.5 dCi 90, 2016" />
@@ -284,7 +296,7 @@ function App() {
               {searchType === 'vin'
                 ? 'VIN : case E de la carte grise, 17 caractères sans I, O ni Q. Espaces et tirets sont supprimés automatiquement.'
                 : searchType === 'plate'
-                  ? 'La plaque est transmise aux marchands ouverts : vérifiez toujours le véhicule proposé.'
+                  ? 'La plaque reste dans cette page. Copiez-la chez le marchand pour identifier le véhicule, puis indiquez la pièce recherchée.'
                   : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
             </div>
             {searchType === 'vin' && (
@@ -405,7 +417,7 @@ function App() {
               <p className="privacy-note">
                 {submittedType === 'vin'
                   ? 'Les liens recherchent la pièce et le véhicule renseignés ; ils ne transmettent pas votre VIN. Le décodeur reçoit le VIN uniquement lorsque vous cliquez sur Identifier. Faites confirmer la compatibilité par le vendeur avant achat.'
-                  : 'Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.'}
+                  : 'Les liens recherchent la pièce et le véhicule renseignés, sans transmettre votre plaque. Confirmez la compatibilité auprès du vendeur.'}
               </p>
             )}
             <div className="supplier-grid">

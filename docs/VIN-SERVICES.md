@@ -24,4 +24,6 @@ GitHub Pages héberge uniquement le client statique. Aucune clé de catalogue ne
 
 ## Vérification
 
-`npm test` vérifie validation, normalisation, réponses complètes / partielles, erreurs API et absence du VIN dans les liens marchands. `npm run build` vérifie la compilation. Le workflow Pages lance ces tests avant de publier.
+`npm test` vérifie les modes description / plaque / VIN, validation, normalisation, réponses complètes / partielles, erreurs API et absence des identifiants dans les liens marchands. `npm run build` vérifie la compilation. `npm run test:e2e` teste les trois parcours dans un navigateur, les filtres, la copie de plaque, les erreurs API, l’annulation des réponses obsolètes, les changements d’onglet et le mobile. Les appels vPIC sont simulés dans les tests navigateur pour vérifier les succès et les échecs de manière reproductible. Le workflow Pages lance tous ces tests avant de publier.
+
+La recherche par plaque est guidée : la plaque est copiée dans le formulaire du marchand, puis le modèle identifié et la pièce sont renseignés dans le site. Un accès VRM fournisseur sera nécessaire pour rendre cette identification automatique. Les tests ne garantissent pas la compatibilité réelle des pièces ni le fonctionnement des sites marchands.
