@@ -76,6 +76,18 @@ h1 > span { color: #76917a; }
 .search-button span { font-size: 15px; }
 .input-hint { display: flex; align-items: center; gap: 6px; margin-top: 10px; color: #90978f; font-size: 10px; }
 .input-hint span { color: #7a9c7e; }
+.vin-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.vin-fields label { color: #506254; font-size: 11px; }
+.vin-fields input { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #dfe4dc; border-radius: 6px; font-size: 12px; }
+.vin-help, .vin-details { margin-top: 14px; color: #506254; font-size: 11px; line-height: 1.6; }
+.vin-help p, .vin-details p { margin-bottom: 8px; }
+.vin-details { padding: 12px; background: #f1f5ee; border-radius: 8px; }
+.vin-details code { overflow-wrap: anywhere; }
+.vin-details dl { display: flex; flex-wrap: wrap; gap: 12px; }
+.vin-details dt { color: #727a72; }
+.vin-details dd { margin: 0; font-weight: 600; }
+.vin-details button { padding: 8px 12px; color: white; background: var(--green); border: 0; border-radius: 6px; }
+@media (max-width: 600px) { .vin-fields { grid-template-columns: 1fr; } }
 .photo-box { align-self: end; }
 .photo-drop { min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 11px; border: 1px dashed #cbd4c9; border-radius: 8px; background: #fbfcf9; cursor: pointer; text-align: center; }
 .photo-icon { width: 24px; height: 24px; display: grid; place-items: center; margin-bottom: 5px; color: #578060; background: #eaf0e8; border-radius: 50%; font-size: 18px; }

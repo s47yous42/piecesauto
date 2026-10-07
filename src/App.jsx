@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { buildSupplierUrl, countries, normalizeSearch, suppliers } from './suppliersConfig.js';
+import { buildVinPartsQuery, inspectVin } from './vin.js';
 
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
-  { id: 'plate', label: 'Immatriculation', icon: '▤' }, { id: 'vin', label: 'N° VIN', icon: '⌗' },
+  { id: 'plate', label: 'Immatriculation', icon: '▤' },
+  { id: 'vin', label: 'N° VIN', icon: '⌗' },
 ];
 
 const conditions = [
@@ -18,6 +20,11 @@ function App() {
   const [country, setCountry] = useState('all');
   const [input, setInput] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
+  const [submittedType, setSubmittedType] = useState('oem');
+  const [vinDetails, setVinDetails] = useState(null);
+  const [vehicle, setVehicle] = useState('');
+  const [part, setPart] = useState('');
+  const [copyStatus, setCopyStatus] = useState('');
   const [image, setImage] = useState(null);
   const [apiKey, setApiKey] = useState('');
   const [imageStatus, setImageStatus] = useState('');
@@ -44,13 +51,37 @@ function App() {
   const submitSearch = (event) => {
     event.preventDefault();
     const query = normalizeSearch(input, searchType);
-    if (searchType === 'vin' && query && !/^[A-HJ-NPR-Z0-9]{17}$/.test(query)) { setError('Le numéro VIN doit contenir 17 lettres ou chiffres, sans I, O ni Q.'); setSubmittedSearch(''); return; } if (!query) {
+    if (!query) {
       setError('Saisissez une référence, une description, une immatriculation ou un numéro VIN.');
       setSubmittedSearch('');
       return;
     }
+    if (searchType === 'vin') {
+      const details = inspectVin(input);
+      setVinDetails(details.error ? null : details);
+      setCopyStatus('');
+      if (details.error || !vehicle.trim() || !part.trim()) {
+        setError(details.error || 'Précisez le modèle / motorisation et la pièce recherchée pour préparer les liens.');
+        setSubmittedSearch('');
+        return;
+      }
+      setInput(details.vin);
+      setSubmittedSearch(buildVinPartsQuery(part, vehicle));
+    } else {
+      setVinDetails(null);
+      setSubmittedSearch(query);
+    }
     setError('');
-    setSubmittedSearch(query);
+    setSubmittedType(searchType);
+  };
+
+  const copyVin = async () => {
+    try {
+      await navigator.clipboard.writeText(vinDetails.vin);
+      setCopyStatus('VIN copié : transmettez-le au vendeur pour confirmer la référence compatible.');
+    } catch {
+      setCopyStatus('Copie indisponible : sélectionnez le VIN affiché et copiez-le manuellement.');
+    }
   };
 
   const selectImage = (event) => {
@@ -176,7 +207,7 @@ function App() {
           </div>
           <span className="floating-spark spark-one">✳</span>
           <span className="floating-spark spark-two">✳</span>
-                    <div className="floating-label">{suppliers.length} marchands<br /><strong>en un clic</strong></div>
+          <div className="floating-label">{suppliers.length} marchands<br /><strong>en un clic</strong></div>
         </div>
       </section>
 
@@ -196,7 +227,7 @@ function App() {
                 <button
                   className={`search-tab ${searchType === type.id ? 'active' : ''}`}
                   key={type.id}
-                  onClick={() => setSearchType(type.id)}
+                  onClick={() => { setSearchType(type.id); setSubmittedSearch(''); setVinDetails(null); setError(''); setCopyStatus(''); }}
                   role="tab"
                   aria-selected={searchType === type.id}
                   type="button"
@@ -207,31 +238,70 @@ function App() {
             </div>
             <form onSubmit={submitSearch}>
               <label className="sr-only" htmlFor="part-search">
-                {searchType === 'vin' ? 'Numéro VIN du véhicule' : searchType === 'plate' ? 'Immatriculation du véhicule' : 'Référence OEM ou description'}
+                {searchType === 'vin'
+                  ? 'Numéro VIN du véhicule'
+                  : searchType === 'plate'
+                    ? 'Immatriculation du véhicule'
+                    : 'Référence OEM ou description'}
               </label>
               <div className="input-row">
                 <span className="input-icon" aria-hidden="true">⌕</span>
                 <input
                   id="part-search"
                   value={input}
-                  onChange={(event) => setInput(event.target.value)}
+                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); }}
+                  autoCapitalize={searchType === 'vin' ? 'characters' : 'none'}
+                  spellCheck={false}
                   placeholder={
-                    searchType === 'plate'
-                      ? 'Ex. AB-123-CD'
-                      : (searchType === 'vin' ? 'Ex. WVWZZZ1JZXW000001' : 'Ex. 8200 123 456 ou alternateur Clio 4')
+                    searchType === 'vin'
+                      ? 'Ex. WVWZZZ1JZXW000001'
+                      : searchType === 'plate'
+                        ? 'Ex. AB-123-CD'
+                        : 'Ex. 8200 123 456 ou alternateur Clio 4'
                   }
                 />
                 <button className="search-button" type="submit">
                   Trouver ma pièce <span aria-hidden="true">↗</span>
                 </button>
               </div>
+              {searchType === 'vin' && (
+                <div className="vin-fields">
+                  <label htmlFor="vin-vehicle">Modèle et motorisation
+                    <input id="vin-vehicle" value={vehicle} onChange={(event) => { setVehicle(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. Renault Clio IV 1.5 dCi 90, 2016" />
+                  </label>
+                  <label htmlFor="vin-part">Pièce ou référence OEM
+                    <input id="vin-part" value={part} onChange={(event) => { setPart(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. alternateur ou référence constructeur" />
+                  </label>
+                </div>
+              )}
             </form>
             <div className="input-hint">
               <span aria-hidden="true">✳</span>
-              {searchType === 'plate'
-                ? 'La plaque est transmise aux marchands ouverts : vérifiez toujours le véhicule proposé.'
-                : searchType === 'vin' ? 'Saisissez 17 caractères, sans I, O ni Q. Le VIN n’est pas décodé par l’application.' : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
+              {searchType === 'vin'
+                ? 'VIN : case E de la carte grise, 17 caractères sans I, O ni Q. Espaces et tirets sont supprimés automatiquement.'
+                : searchType === 'plate'
+                  ? 'La plaque est transmise aux marchands ouverts : vérifiez toujours le véhicule proposé.'
+                  : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
             </div>
+            {searchType === 'vin' && (
+              <div className="vin-help">
+                <p>Le VIN identifie votre véhicule. Le modèle, le moteur et les références de pièces nécessitent un catalogue constructeur. Indiquez ces informations pour rechercher, puis faites confirmer la pièce avec votre VIN par le vendeur.</p>
+                <a href="https://www.outilsobdfacile.fr/blog/numero-vin-p73.html" target="_blank" rel="noopener noreferrer">Où trouver et comprendre mon VIN ? ↗</a>
+              </div>
+            )}
+            {searchType === 'vin' && vinDetails && (
+              <div className="vin-details">
+                <strong>VIN au format valide : <code>{vinDetails.vin}</code></strong>
+                <dl>
+                  <div><dt>WMI · constructeur</dt><dd>{vinDetails.wmi}{vinDetails.manufacturer ? ` · ${vinDetails.manufacturer}` : ' · constructeur non identifié'}</dd></div>
+                  <div><dt>VDS · description</dt><dd>{vinDetails.vds}</dd></div>
+                  <div><dt>VIS · identification</dt><dd>{vinDetails.vis}</dd></div>
+                </dl>
+                <p>Le format seul ne confirme ni l’existence du véhicule ni la compatibilité. Année, moteur et finition ne sont pas déduits automatiquement.</p>
+                <button type="button" onClick={copyVin}>Copier le VIN pour le vendeur</button>
+                {copyStatus && <p role="status">{copyStatus}</p>}
+              </div>
+            )}
           </div>
 
           <div className="photo-box">
@@ -320,9 +390,11 @@ function App() {
               <span>Résultats pour</span> <strong>{submittedSearch}</strong>
               <span className="query-count">{visibleSuppliers.length} marchands</span>
             </div>
-            {(searchType === 'plate' || searchType === 'vin') && (
+            {(submittedType === 'plate' || submittedType === 'vin') && (
               <p className="privacy-note">
-                {searchType === 'vin' ? 'Le VIN sera inclus dans les liens et transmis aux sites marchands au clic. L’application ne décode pas le véhicule : confirmez la compatibilité chez le vendeur.' : 'Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.'}
+                {submittedType === 'vin'
+                  ? 'Les liens recherchent la pièce et le véhicule renseignés. Votre VIN reste dans cette page et n’est pas envoyé dans les liens. Transmettez-le au vendeur pour confirmer la compatibilité avant achat.'
+                  : 'Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.'}
               </p>
             )}
             <div className="supplier-grid">
