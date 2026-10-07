@@ -27,6 +27,7 @@ Le workflow `.github/workflows/deploy.yml` construit puis déploie `dist` à cha
 ## Recherche et confidentialité
 
 - Le moteur de liens et la liste des marchands sont dans `src/suppliersConfig.js`.
-- Les filtres d’état affichent les marchands configurés pour le neuf ou l’occasion.
+- Les filtres combinables par pays et par état couvrent la France, l’Allemagne, l’Italie et l’Espagne, avec AUTODOC et les places de marché eBay locales.
+- Les catalogues européens dont l’URL de recherche n’est pas stable utilisent une recherche web ciblée vers le domaine du vendeur.
 - Une immatriculation est transmise au site marchand lorsque l’utilisateur ouvre un lien ; elle n’est pas décodée en véhicule par l’application.
 - L’analyse de photo est facultative et envoie l’image directement à l’API Gemini depuis le navigateur. L’utilisateur fournit lui-même sa clé, qui n’est pas enregistrée par l’application, mais reste accessible dans le navigateur et dans les outils réseau. Pour un usage public, préférez une fonction serverless avec une clé stockée côté serveur et des limites d’utilisation.

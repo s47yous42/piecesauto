@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildSupplierUrl, normalizeSearch, suppliers } from './suppliersConfig.js';
+import { buildSupplierUrl, countries, normalizeSearch, suppliers } from './suppliersConfig.js';
 
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
@@ -15,6 +15,7 @@ const conditions = [
 function App() {
   const [searchType, setSearchType] = useState('oem');
   const [condition, setCondition] = useState('all');
+  const [country, setCountry] = useState('all');
   const [input, setInput] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
   const [image, setImage] = useState(null);
@@ -33,9 +34,11 @@ function App() {
   const visibleSuppliers = useMemo(
     () =>
       suppliers.filter(
-        (supplier) => condition === 'all' || supplier.conditions.includes(condition),
+        (supplier) =>
+          (condition === 'all' || supplier.conditions.includes(condition)) &&
+          (country === 'all' || supplier.country === country),
       ),
-    [condition],
+    [condition, country],
   );
 
   const submitSearch = (event) => {
@@ -292,6 +295,19 @@ function App() {
             ))}
           </div>
         </div>
+        <div className="country-filter" role="group" aria-label="Filtrer par pays">
+          {countries.map((item) => (
+            <button
+              className={country === item.id ? 'selected' : ''}
+              key={item.id}
+              onClick={() => setCountry(item.id)}
+              type="button"
+              aria-pressed={country === item.id}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
 
         {!submittedSearch ? (
           <div className="empty-state">
@@ -320,6 +336,7 @@ function App() {
                     </span>
                     <span className="card-index">{String(index + 1).padStart(2, '0')}</span>
                   </div>
+                  <span className="country-pill">{supplier.countryLabel}</span>
                   <span className={`category-pill ${supplier.conditions.includes('used') && !supplier.conditions.includes('new') ? 'used' : ''}`}>
                     {supplier.category}
                   </span>
