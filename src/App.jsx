@@ -3,7 +3,7 @@ import { buildSupplierUrl, countries, normalizeSearch, suppliers } from './suppl
 
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
-  { id: 'plate', label: 'Immatriculation', icon: '▤' },
+  { id: 'plate', label: 'Immatriculation', icon: '▤' }, { id: 'vin', label: 'N° VIN', icon: '⌗' },
 ];
 
 const conditions = [
@@ -44,8 +44,8 @@ function App() {
   const submitSearch = (event) => {
     event.preventDefault();
     const query = normalizeSearch(input, searchType);
-    if (!query) {
-      setError('Saisissez une référence, une description ou une immatriculation.');
+    if (searchType === 'vin' && query && !/^[A-HJ-NPR-Z0-9]{17}$/.test(query)) { setError('Le numéro VIN doit contenir 17 lettres ou chiffres, sans I, O ni Q.'); setSubmittedSearch(''); return; } if (!query) {
+      setError('Saisissez une référence, une description, une immatriculation ou un numéro VIN.');
       setSubmittedSearch('');
       return;
     }
@@ -207,7 +207,7 @@ function App() {
             </div>
             <form onSubmit={submitSearch}>
               <label className="sr-only" htmlFor="part-search">
-                {searchType === 'plate' ? 'Immatriculation du véhicule' : 'Référence OEM ou description'}
+                {searchType === 'vin' ? 'Numéro VIN du véhicule' : searchType === 'plate' ? 'Immatriculation du véhicule' : 'Référence OEM ou description'}
               </label>
               <div className="input-row">
                 <span className="input-icon" aria-hidden="true">⌕</span>
@@ -218,7 +218,7 @@ function App() {
                   placeholder={
                     searchType === 'plate'
                       ? 'Ex. AB-123-CD'
-                      : 'Ex. 8200 123 456 ou alternateur Clio 4'
+                      : (searchType === 'vin' ? 'Ex. WVWZZZ1JZXW000001' : 'Ex. 8200 123 456 ou alternateur Clio 4')
                   }
                 />
                 <button className="search-button" type="submit">
@@ -230,7 +230,7 @@ function App() {
               <span aria-hidden="true">✳</span>
               {searchType === 'plate'
                 ? 'La plaque est transmise aux marchands ouverts : vérifiez toujours le véhicule proposé.'
-                : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
+                : searchType === 'vin' ? 'Saisissez 17 caractères, sans I, O ni Q. Le VIN n’est pas décodé par l’application.' : 'Astuce : une référence OEM précise donne de meilleurs résultats.'}
             </div>
           </div>
 
@@ -312,7 +312,7 @@ function App() {
         {!submittedSearch ? (
           <div className="empty-state">
             <span className="empty-icon" aria-hidden="true">⌕</span>
-            <p>Entrez une référence ou une description pour préparer vos liens de recherche.</p>
+            <p>Entrez une référence, une description, une immatriculation ou un VIN pour préparer vos liens de recherche.</p>
           </div>
         ) : (
           <>
@@ -320,9 +320,9 @@ function App() {
               <span>Résultats pour</span> <strong>{submittedSearch}</strong>
               <span className="query-count">{visibleSuppliers.length} marchands</span>
             </div>
-            {searchType === 'plate' && (
+            {(searchType === 'plate' || searchType === 'vin') && (
               <p className="privacy-note">
-                Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.
+                {searchType === 'vin' ? 'Le VIN sera inclus dans les liens et transmis aux sites marchands au clic. L’application ne décode pas le véhicule : confirmez la compatibilité chez le vendeur.' : 'Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.'}
               </p>
             )}
             <div className="supplier-grid">
