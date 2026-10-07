@@ -6,3 +6,4 @@ dist/
 package/
 npm-tool.tgz
 *.log
+vpic-sample.json

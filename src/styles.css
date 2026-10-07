@@ -87,6 +87,13 @@ h1 > span { color: #76917a; }
 .vin-details dt { color: #727a72; }
 .vin-details dd { margin: 0; font-weight: 600; }
 .vin-details button { padding: 8px 12px; color: white; background: var(--green); border: 0; border-radius: 6px; }
+.vin-decoder, .vin-catalogues { padding: 12px; margin-top: 12px; background: #f1f5ee; border-radius: 8px; color: #506254; font-size: 11px; line-height: 1.6; }
+.vin-decoder button { padding: 9px 12px; background: var(--green); color: white; border: 0; border-radius: 6px; }
+.vin-decoder button:disabled { opacity: .65; cursor: wait; }
+.vin-decoder p { margin: 8px 0 0; }
+.vin-decoder dl { display: flex; flex-wrap: wrap; gap: 12px; }
+.vin-decoder dd { margin: 0; font-weight: 600; }
+.vin-catalogues a, .vin-catalogues small { display: block; margin-top: 8px; }
 @media (max-width: 600px) { .vin-fields { grid-template-columns: 1fr; } }
 .photo-box { align-self: end; }
 .photo-drop { min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 11px; border: 1px dashed #cbd4c9; border-radius: 8px; background: #fbfcf9; cursor: pointer; text-align: center; }

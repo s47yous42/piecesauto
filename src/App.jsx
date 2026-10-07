@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { buildSupplierUrl, countries, normalizeSearch, suppliers } from './suppliersConfig.js';
 import { buildVinPartsQuery, inspectVin } from './vin.js';
+import VinDecoder from './VinDecoder.jsx';
 
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
@@ -249,7 +250,7 @@ function App() {
                 <input
                   id="part-search"
                   value={input}
-                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); }}
+                  onChange={(event) => { setInput(event.target.value); setSubmittedSearch(''); setVinDetails(null); setCopyStatus(''); if (searchType === 'vin') setVehicle(''); }}
                   autoCapitalize={searchType === 'vin' ? 'characters' : 'none'}
                   spellCheck={false}
                   placeholder={
@@ -264,6 +265,9 @@ function App() {
                   Trouver ma pièce <span aria-hidden="true">↗</span>
                 </button>
               </div>
+              {searchType === 'vin' && (
+                <VinDecoder vin={input} onVehicle={(description) => { setVehicle(description); setSubmittedSearch(''); setError(''); }} />
+              )}
               {searchType === 'vin' && (
                 <div className="vin-fields">
                   <label htmlFor="vin-vehicle">Modèle et motorisation
@@ -285,8 +289,15 @@ function App() {
             </div>
             {searchType === 'vin' && (
               <div className="vin-help">
-                <p>Le VIN identifie votre véhicule. Le modèle, le moteur et les références de pièces nécessitent un catalogue constructeur. Indiquez ces informations pour rechercher, puis faites confirmer la pièce avec votre VIN par le vendeur.</p>
+                <p>Identifiez le véhicule ci-dessus, complétez la motorisation puis choisissez la pièce. Pour obtenir sa référence OEM, consultez un catalogue constructeur avec votre VIN avant de rechercher chez les marchands.</p>
                 <a href="https://www.outilsobdfacile.fr/blog/numero-vin-p73.html" target="_blank" rel="noopener noreferrer">Où trouver et comprendre mon VIN ? ↗</a>
+                <div className="vin-catalogues">
+                  <strong>Retrouver la référence de pièce</strong>
+                  <a href="https://www.partslink24.com/" target="_blank" rel="noopener noreferrer">Ouvrir le catalogue constructeur partslink24 ↗</a>
+                  <p>Accès externe avec abonnement : copiez votre VIN, sélectionnez le véhicule et relevez la référence OEM. Collez-la dans « Pièce ou référence OEM ».</p>
+                  <a href="https://www.tecalliance.net/fr/produits?famille=tecdoc&solution=catalogue-ecommerce" target="_blank" rel="noopener noreferrer">Découvrir le catalogue TecDoc ↗</a>
+                  <small>Les références du catalogue ne sont pas encore récupérées dans cette page.</small>
+                </div>
               </div>
             )}
             {searchType === 'vin' && vinDetails && (
@@ -297,7 +308,7 @@ function App() {
                   <div><dt>VDS · description</dt><dd>{vinDetails.vds}</dd></div>
                   <div><dt>VIS · identification</dt><dd>{vinDetails.vis}</dd></div>
                 </dl>
-                <p>Le format seul ne confirme ni l’existence du véhicule ni la compatibilité. Année, moteur et finition ne sont pas déduits automatiquement.</p>
+                <p>Le format seul ne confirme ni l’existence du véhicule ni la compatibilité. Complétez les informations du décodeur et faites confirmer la référence par le vendeur.</p>
                 <button type="button" onClick={copyVin}>Copier le VIN pour le vendeur</button>
                 {copyStatus && <p role="status">{copyStatus}</p>}
               </div>
@@ -393,7 +404,7 @@ function App() {
             {(submittedType === 'plate' || submittedType === 'vin') && (
               <p className="privacy-note">
                 {submittedType === 'vin'
-                  ? 'Les liens recherchent la pièce et le véhicule renseignés. Votre VIN reste dans cette page et n’est pas envoyé dans les liens. Transmettez-le au vendeur pour confirmer la compatibilité avant achat.'
+                  ? 'Les liens recherchent la pièce et le véhicule renseignés ; ils ne transmettent pas votre VIN. Le décodeur reçoit le VIN uniquement lorsque vous cliquez sur Identifier. Faites confirmer la compatibilité par le vendeur avant achat.'
                   : 'Votre immatriculation sera incluse dans les liens ouverts. Elle sera transmise aux sites marchands au clic.'}
               </p>
             )}
