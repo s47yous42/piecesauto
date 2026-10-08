@@ -4,6 +4,7 @@ import { inspectPlate, prepareSearch } from './search.js';
 import VinDecoder from './VinDecoder.jsx';
 import OfferComparison from './OfferComparison.jsx';
 import { createOfferCriteria } from './offers.js';
+import { identifyVinProfile } from './vinProfiles.js';
 
 // The comparison service is available only in the explicit local build.
 const comparisonEnabled = import.meta.env.MODE === 'comparison';
@@ -32,9 +33,13 @@ function App() {
   const [submittedType, setSubmittedType] = useState('oem');
   const [vinDetails, setVinDetails] = useState(null);
   const [vehicles, setVehicles] = useState({ plate: '', vin: '' });
-  const vehicle = vehicles[searchType] || '';
+  const vinProfile = identifyVinProfile(inputs.vin);
+  const vinVehicle = vehicles.vin || vinProfile?.description || '';
+  const vehicle = searchType === 'vin' ? vinVehicle : vehicles[searchType] || '';
   const setVehicle = (value) => setVehicles((previous) => ({ ...previous, [searchType]: value }));
-  const [part, setPart] = useState('');
+  // One requested part is shared by description, VIN, plate and model modes.
+  const part = inputs.oem;
+  const setPart = (value) => setInputs((previous) => ({ ...previous, oem: value }));
   const [reference, setReference] = useState('');
   const [offerCriteria, setOfferCriteria] = useState(null);
   const [copyStatus, setCopyStatus] = useState('');
@@ -63,7 +68,7 @@ function App() {
 
   const submitSearch = (event) => {
     event.preventDefault();
-    const prepared = prepareSearch({ type: searchType, input, vehicle, part, year: inputs.year || '' });
+    const prepared = prepareSearch({ type: searchType, input, vehicle, part, year: inputs.year || '', vinContext: { vin: inputs.vin, vehicle: vinVehicle } });
     setVinDetails(searchType === 'vin' && prepared.vin ? prepared : null);
     setCopyStatus('');
     if (prepared.error) {
@@ -72,7 +77,7 @@ function App() {
       return;
     }
     setSubmittedSearch(prepared.query);
-    if (comparisonEnabled) setOfferCriteria(createOfferCriteria({ query: prepared.query, type: searchType, vehicle: searchType === 'model' ? `${prepared.model} ${prepared.year}` : vehicle, part: searchType === 'oem' ? input : part, reference }));
+    if (comparisonEnabled) setOfferCriteria(createOfferCriteria({ query: prepared.query, type: searchType, vehicle: prepared.vehicle || '', part: prepared.part || input, reference }));
     setError('');
     setSubmittedType(searchType);
   };
@@ -249,6 +254,14 @@ function App() {
                 </button>
               ))}
             </div>
+            {inputs.vin.trim() && (searchType === 'oem' || searchType === 'vin') && (
+              <div className="vin-help" aria-label="Véhicule associé à la recherche">
+                <strong>Véhicule ciblé : {vinVehicle || 'à identifier dans l’onglet N° VIN'}</strong>
+                <p>Le VIN et la description sont associés : les liens recherchent la pièce avec le modèle et la motorisation du véhicule, sans transmettre le VIN aux marchands.</p>
+                {vinProfile && <p>Type constructeur {vinProfile.chassis} ; moteur d’origine {vinProfile.engine}, à vérifier sur le véhicule. <a href={vinProfile.source.url} target="_blank" rel="noopener noreferrer">Source : catalogue Motorservice ↗</a></p>}
+                <button type="button" onClick={() => { setInputs((previous) => ({ ...previous, vin: '' })); setVehicles((previous) => ({ ...previous, vin: '' })); setSubmittedSearch(''); setVinDetails(null); setError(''); setCopyStatus(''); }}>Retirer le véhicule associé</button>
+              </div>
+            )}
             <form onSubmit={submitSearch}>
               <label className="sr-only" htmlFor="part-search">
                 {searchType === 'vin'
@@ -458,9 +471,9 @@ function App() {
               <span className="query-count">{visibleSuppliers.length} marchands</span>
             </div>
             {comparisonEnabled && offerCriteria && <OfferComparison criteria={offerCriteria} country={country} condition={condition} />}
-            {(submittedType === 'plate' || submittedType === 'vin') && (
+            {(submittedType === 'plate' || submittedType === 'vin' || (submittedType === 'oem' && inputs.vin.trim())) && (
               <p className="privacy-note">
-                {submittedType === 'vin'
+                {submittedType !== 'plate'
                   ? 'Les liens recherchent la pièce et le véhicule renseignés ; ils ne transmettent pas votre VIN. Le décodeur reçoit le VIN uniquement lorsque vous cliquez sur Identifier. Faites confirmer la compatibilité par le vendeur avant achat.'
                   : 'Les liens recherchent la pièce et le véhicule renseignés, sans transmettre votre plaque. Confirmez la compatibilité auprès du vendeur.'}
               </p>

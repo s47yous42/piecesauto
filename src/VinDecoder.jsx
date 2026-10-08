@@ -43,7 +43,7 @@ export default function VinDecoder({ vin, onVehicle }) {
   return (
     <div className="vin-decoder">
       <button type="button" onClick={identify} disabled={loading}>{loading ? 'Identification…' : 'Identifier le véhicule avec le VIN'}</button>
-      <p>Au clic, le VIN est envoyé au service public NHTSA vPIC. Couverture limitée pour les véhicules européens ; le VIN n’est pas enregistré par cette application.</p>
+      <p>Les types constructeur documentés sont identifiés dans cette page. Pour les autres VIN, le clic interroge le service public NHTSA vPIC, dont la couverture européenne est limitée. Le VIN n’est pas enregistré par cette application.</p>
       {status && <p role="status">{status}</p>}
       {result && (
         <>
@@ -52,6 +52,7 @@ export default function VinDecoder({ vin, onVehicle }) {
             <div><dt>Année modèle</dt><dd>{result.year || 'Non renseignée'}</dd></div>
             <div><dt>Moteur / cylindrée</dt><dd>{[result.engine, result.capacity].filter(Boolean).join(' · ') || 'Non renseignés'}</dd></div>
           </dl>
+          {result.source && <p><a href={result.source.url} target="_blank" rel="noopener noreferrer">{result.source.title} ↗</a></p>}
           {result.reliable && <button type="button" onClick={() => { onVehicle(result.description); setStatus('Informations reprises dans la recherche. Complétez la motorisation si nécessaire.'); }}>Utiliser ce véhicule dans la recherche</button>}
         </>
       )}

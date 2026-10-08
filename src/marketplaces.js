@@ -19,6 +19,7 @@ export const partNames = [
   ['phare', 'scheinwerfer', 'faro', 'faro', 'koplamp', 'reflektor'],
   ['pare-chocs', 'stoßstange', 'paraurti', 'parachoques', 'bumper', 'zderzak'],
   ['injecteur', 'einspritzdüse', 'iniettore', 'inyector', 'injector', 'wtryskiwacz'],
+  ['moteur', 'motor', 'motore', 'motor', 'motor', 'silnik'],
 ];
 
 export function translateQuery(query, country) {

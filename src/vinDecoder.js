@@ -1,4 +1,5 @@
 import { inspectVin } from './vin.js';
+import { identifyVinProfile } from './vinProfiles.js';
 
 export function parseDecodedVehicle(payload) {
   const result = payload?.Results?.[0];
@@ -21,6 +22,11 @@ export function parseDecodedVehicle(payload) {
 export async function decodeVin(value, { signal, fetchImpl = fetch } = {}) {
   const details = inspectVin(value);
   if (details.error) throw new Error(details.error);
+  signal?.throwIfAborted();
+  const profile = identifyVinProfile(details.vin);
+  if (profile) return { ...profile, year: '', reliable: true, identification: 'chassis-type',
+    warning: `Type constructeur ${profile.chassis} identifié dans le catalogue. Moteur d’origine ${profile.engine}, à confirmer sur le véhicule ; année et équipements individuels non décodés.`,
+  };
   const response = await fetchImpl(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${encodeURIComponent(details.vin)}?format=json`, { signal });
   if (!response.ok) throw new Error('Le service VIN est indisponible. Réessayez ou renseignez le véhicule manuellement.');
   return parseDecodedVehicle(await response.json());
