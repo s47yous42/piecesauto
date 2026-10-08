@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --test src/vin.test.js",
+    "test": "node --test src/vin.test.js tests/unit/*.test.js",
+    "start": "node server/index.js",
+    "test:live": "node tests/live/check-marketplaces.js",
     "test:e2e": "playwright test",
     "dev": "vite",
     "build": "vite build",

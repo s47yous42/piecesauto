@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { buildSupplierUrl, countries, suppliers } from './suppliersConfig.js';
 import { inspectPlate, prepareSearch } from './search.js';
 import VinDecoder from './VinDecoder.jsx';
+import OfferComparison from './OfferComparison.jsx';
+import { createOfferCriteria } from './offers.js';
 
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
@@ -30,6 +32,8 @@ function App() {
   const vehicle = vehicles[searchType] || '';
   const setVehicle = (value) => setVehicles((previous) => ({ ...previous, [searchType]: value }));
   const [part, setPart] = useState('');
+  const [reference, setReference] = useState('');
+  const [offerCriteria, setOfferCriteria] = useState(null);
   const [copyStatus, setCopyStatus] = useState('');
   const [image, setImage] = useState(null);
   const [apiKey, setApiKey] = useState('');
@@ -65,6 +69,7 @@ function App() {
       return;
     }
     setSubmittedSearch(prepared.query);
+    setOfferCriteria(createOfferCriteria({ query: prepared.query, type: searchType, vehicle: searchType === 'model' ? `${prepared.model} ${prepared.year}` : vehicle, part: searchType === 'oem' ? input : part, reference }));
     setError('');
     setSubmittedType(searchType);
   };
@@ -316,6 +321,11 @@ function App() {
                   </label>
                 </div>
               )}
+              <div className="vin-fields">
+                <label htmlFor="offer-reference">Référence OEM à comparer (facultatif)
+                  <input id="offer-reference" value={reference} onChange={(event) => { setReference(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. 231008918R — même référence pour neuf et occasion" maxLength={40} />
+                </label>
+              </div>
             </form>
             <div className="input-hint">
               <span aria-hidden="true">✳</span>
@@ -429,7 +439,7 @@ function App() {
             </button>
           ))}
         </div>
-        <p className="price-note">Les prix et frais de livraison ne sont pas récupérés ici : ouvrez plusieurs vendeurs pour comparer le coût total et la disponibilité.</p>
+        <p className="price-note">Comparez les offres accessibles et consultez les autres marchands. Un prix hors port ne permet pas de déterminer le meilleur coût livré.</p>
 
         {!submittedSearch ? (
           <div className="empty-state">
@@ -442,6 +452,7 @@ function App() {
               <span>Résultats pour</span> <strong>{submittedSearch}</strong>
               <span className="query-count">{visibleSuppliers.length} marchands</span>
             </div>
+            {offerCriteria && <OfferComparison criteria={offerCriteria} country={country} condition={condition} />}
             {(submittedType === 'plate' || submittedType === 'vin') && (
               <p className="privacy-note">
                 {submittedType === 'vin'

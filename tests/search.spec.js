@@ -11,11 +11,12 @@ test('description generates encoded merchant searches and filters country and co
   await expect(page.locator('.query-summary')).toContainText('ALTERNATEUR CLIO 4');
   await page.getByRole('button', { name: 'Allemagne', exact: true }).click();
   await page.getByRole('button', { name: 'Occasion', exact: true }).click();
-  await expect(page.locator('.supplier-card')).toHaveCount(1);
-  const url = new URL(await page.locator('.supplier-link').getAttribute('href'));
+  const ebayCard = page.locator('.supplier-card').filter({ hasText: 'eBay' });
+  await expect(ebayCard).toHaveCount(1);
+  const url = new URL(await ebayCard.locator('.supplier-link').getAttribute('href'));
   expect(url.searchParams.get('_nkw')).toContain('ALTERNATEUR CLIO 4');
   expect(url.searchParams.get('LH_ItemCondition')).toBe('3000');
-  await expect(page.locator('.supplier-link')).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(ebayCard.locator('.supplier-link')).toHaveAttribute('rel', 'noopener noreferrer');
 });
 
 test('model and year searches send the part and vehicle details to merchant results', async ({ page }) => {
@@ -53,7 +54,13 @@ test('plate requires the requested part and confirmed vehicle; never sends plate
   await page.getByRole('button', { name: 'Trouver ma pièce' }).click();
   await expect(page.locator('.query-summary')).toContainText('alternateur Renault Clio IV');
   const links = await page.locator('.supplier-link').evaluateAll((elements) => elements.map((element) => element.href));
-  for (const href of links) { expect(href).not.toMatch(/AB-123-CD|AB123CD/i); expect([...new URL(href).searchParams.values()].join(' ')).toContain('alternateur Renault Clio IV'); }
+  for (const href of links) {
+    expect(href).not.toMatch(/AB-123-CD|AB123CD/i);
+    const url = new URL(href);
+    const search = `${decodeURIComponent(url.pathname)} ${[...url.searchParams.values()].join(' ')}`;
+    expect(search).toContain('Renault Clio IV');
+    expect(search).toMatch(/alternateur|lichtmaschine|alternatore|alternador|dynamo|alternator/);
+  }
 });
 
 test('invalid plates cannot produce merchant results', async ({ page }) => {

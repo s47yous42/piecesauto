@@ -1,3 +1,5 @@
+import { marketplaces, marketplaceUrl, translateQuery } from './marketplaces.js';
+
 const searchOnSite = (domain, query) =>
   `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${query}`)}`;
 
@@ -237,6 +239,11 @@ export const suppliers = [
   autodocSupplier('be', 'Belgique', 'www.autodoc.be'),
   siteSearchSupplier('mister-auto-be', 'Mister-Auto', 'Pièces neuves et équipement automobile', 'Neuf', ['new'], 'be', 'Belgique', 'teal', 'mister-auto.be'),
   ebaySupplier('be', 'Belgique', 'Annonces belges, pièces neuves et d’occasion'),
+  ...marketplaces.filter((marketplace) => marketplace.id !== 'leboncoin').map((marketplace) => ({
+    id: marketplace.id, name: marketplace.name, description: 'Annonces de pièces auto de particuliers et professionnels', category: 'Neuf & occasion', conditions: ['new', 'used'], country: marketplace.country,
+    countryLabel: countries.find((country) => country.id === marketplace.country).label, color: 'yellow',
+    searchUrl: (query, condition) => marketplaceUrl(marketplace, withCondition(translateQuery(query, marketplace.country), condition, marketplace.country)),
+  })),
 ];
 
 export const normalizeSearch = (value, type) => {

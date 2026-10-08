@@ -100,8 +100,9 @@ test('supplier links search the requested part and vehicle without disclosing th
   for (const supplier of suppliers) {
     for (const condition of ['all', ...supplier.conditions]) {
       const url = new URL(buildSupplierUrl(supplier, query, condition));
-      const search = [...url.searchParams.values()].join(' ');
-      assert.ok(search.includes(query), supplier.id);
+      const search = `${decodeURIComponent(url.pathname)} ${[...url.searchParams.values()].join(' ')}`;
+      const words = ['alternateur', 'lichtmaschine', 'alternatore', 'alternador', 'dynamo', 'alternator'];
+      assert.ok(words.some((word) => search.includes(`${word} Citroën C3 1.2`)), supplier.id);
       assert.ok(!url.href.includes('VF7SBHMZ0EW554823'));
       assert.equal(url.protocol, 'https:');
     }

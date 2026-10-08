@@ -1,6 +1,6 @@
 # PieceAuto
 
-Application React + Vite entièrement statique pour préparer des recherches de pièces auto chez plusieurs marchands. Aucun backend ni scraping n’est utilisé : les liens ouvrent les recherches des sites marchands, ou une recherche web ciblée pour les sites sans URL de recherche publique stable.
+Application React + Vite pour rechercher des pièces auto chez plusieurs marchands européens. Les liens marchands fonctionnent sur GitHub Pages. La version locale en préparation ajoute un serveur Node.js lisant les annonces publiques accessibles, sans clé API, pour rapprocher les prix neuf/occasion par référence OEM. Voir [la comparaison de prix et ses limites](docs/PRICE-COMPARISON.md).
 
 ## Développement local
 
@@ -18,7 +18,9 @@ npm run build
 npm run preview
 ```
 
-Tests avant publication : `npm test`, `npm run build`, puis `npm run test:e2e`. Les tests navigateur utilisent Chrome installé sous Windows ; sur Linux, installer Chromium avec `npx playwright install --with-deps chromium`. Le workflow GitHub Pages exécute ces vérifications avant de déployer.
+Pour utiliser le comparateur local après compilation : `npm start`, puis ouvrir http://127.0.0.1:4173. Il est prévu pour la livraison à **69390 Vernaison, France**. Le comparateur ne fonctionne pas sur GitHub Pages sans hébergement serveur supplémentaire.
+
+Tests avant publication : `npm test`, `npm run build`, `npm run test:e2e`, puis `npm run test:live`. Les tests navigateur utilisent Chrome installé sous Windows ; sur Linux, installer Chromium avec `npx playwright install --with-deps chromium`. Le workflow GitHub Pages exécute ces vérifications avant de déployer. Les sources inaccessibles ou l’absence d’un prix livré valide bloquent le contrôle réel et la publication.
 
 ## Déploiement GitHub Pages
 
