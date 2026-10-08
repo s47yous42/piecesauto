@@ -5,6 +5,7 @@ import VinDecoder from './VinDecoder.jsx';
 import OfferComparison from './OfferComparison.jsx';
 import { createOfferCriteria } from './offers.js';
 import { identifyVinProfile } from './vinProfiles.js';
+import VehicleSearch from './VehicleSearch.jsx';
 
 // The comparison service is available only in the explicit local build.
 const comparisonEnabled = import.meta.env.MODE === 'comparison';
@@ -14,6 +15,7 @@ const searchTypes = [
   { id: 'plate', label: 'Immatriculation', icon: '▤' },
   { id: 'vin', label: 'N° VIN', icon: '⌗' },
   { id: 'model', label: 'Modèle / année', icon: '🚘' },
+  { id: 'vehicles', label: 'Véhicules', icon: '🚗' },
 ];
 
 const conditions = [
@@ -27,7 +29,7 @@ function App() {
   const [condition, setCondition] = useState('all');
   const [country, setCountry] = useState('all');
   const [inputs, setInputs] = useState({ oem: '', plate: '', vin: '', model: '', year: '' });
-  const input = inputs[searchType];
+  const input = inputs[searchType] || '';
   const setInput = (value) => setInputs((previous) => ({ ...previous, [searchType]: value }));
   const [submittedSearch, setSubmittedSearch] = useState('');
   const [submittedType, setSubmittedType] = useState('oem');
@@ -238,7 +240,7 @@ function App() {
           <span className="step-number">01 <span>/ 02</span></span>
         </div>
 
-        <div className="search-layout">
+        <div className={`search-layout ${searchType === 'vehicles' ? 'vehicle-layout' : ''}`}>
           <div className="search-main">
             <div className="search-tabs" role="tablist" aria-label="Type de recherche">
               {searchTypes.map((type) => (
@@ -254,6 +256,8 @@ function App() {
                 </button>
               ))}
             </div>
+            <VehicleSearch active={searchType === 'vehicles'} />
+            {searchType !== 'vehicles' && <>
             {inputs.vin.trim() && (searchType === 'oem' || searchType === 'vin') && (
               <div className="vin-help" aria-label="Véhicule associé à la recherche">
                 <strong>Véhicule ciblé : {vinVehicle || 'à identifier dans l’onglet N° VIN'}</strong>
@@ -379,9 +383,10 @@ function App() {
                 {copyStatus && <p role="status">{copyStatus}</p>}
               </div>
             )}
+            </>}
           </div>
 
-          <div className="photo-box">
+          <div className="photo-box" hidden={searchType === 'vehicles'}>
             <label className="photo-drop" htmlFor="part-photo">
               {image ? (
                 <img className="photo-preview" src={image.preview} alt="Aperçu de la pièce à analyser" />
@@ -418,11 +423,11 @@ function App() {
           </div>
         </div>
 
-        {imageStatus && <p className="success-message" role="status">{imageStatus}</p>}
+        {searchType !== 'vehicles' && imageStatus && <p className="success-message" role="status">{imageStatus}</p>}
         {error && <p className="error-message" role="alert">{error}</p>}
       </section>
 
-      <section className="results-section" aria-labelledby="results-heading">
+      <section className="results-section" aria-labelledby="results-heading" hidden={searchType === 'vehicles'}>
         <div className="results-heading">
           <div>
             <p className="eyebrow">À VOUS DE COMPARER</p>
