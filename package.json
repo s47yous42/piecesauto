@@ -8,8 +8,10 @@
     "start": "node server/index.js",
     "test:live": "node tests/live/check-marketplaces.js",
     "test:e2e": "playwright test",
+    "test:e2e:comparison": "playwright test --config playwright.comparison.config.js",
     "dev": "vite",
     "build": "vite build",
+    "build:comparison": "vite build --mode comparison",
     "preview": "vite preview"
   },
   "dependencies": {

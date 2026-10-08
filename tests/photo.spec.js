@@ -14,7 +14,8 @@ test('photo recognition fills the description but cannot assert an OEM or compat
   await page.getByLabel('Clé API Gemini', { exact: true }).fill('test-key-not-a-real-secret');
   await page.getByRole('button', { name: 'Identifier', exact: true }).click();
   await expect(page.getByLabel('Référence OEM ou description', { exact: true })).toHaveValue('alternateur Renault Clio');
-  await expect(page.getByLabel('Référence OEM à comparer (facultatif)', { exact: true })).toHaveValue('');
+  // The optional comparison field is absent in the static build and stays empty locally.
+  expect(await page.locator('#offer-reference').evaluateAll((fields) => fields.every((field) => field.value === ''))).toBe(true);
   expect(call.contents[0].parts[1].inline_data.mime_type).toBe('image/png');
   expect(await page.evaluate(() => ({ ...localStorage }))).not.toHaveProperty('apiKey');
 });

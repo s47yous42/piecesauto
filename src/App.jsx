@@ -5,6 +5,9 @@ import VinDecoder from './VinDecoder.jsx';
 import OfferComparison from './OfferComparison.jsx';
 import { createOfferCriteria } from './offers.js';
 
+// The comparison service is available only in the explicit local build.
+const comparisonEnabled = import.meta.env.MODE === 'comparison';
+
 const searchTypes = [
   { id: 'oem', label: 'Référence ou description', icon: '⌕' },
   { id: 'plate', label: 'Immatriculation', icon: '▤' },
@@ -69,7 +72,7 @@ function App() {
       return;
     }
     setSubmittedSearch(prepared.query);
-    setOfferCriteria(createOfferCriteria({ query: prepared.query, type: searchType, vehicle: searchType === 'model' ? `${prepared.model} ${prepared.year}` : vehicle, part: searchType === 'oem' ? input : part, reference }));
+    if (comparisonEnabled) setOfferCriteria(createOfferCriteria({ query: prepared.query, type: searchType, vehicle: searchType === 'model' ? `${prepared.model} ${prepared.year}` : vehicle, part: searchType === 'oem' ? input : part, reference }));
     setError('');
     setSubmittedType(searchType);
   };
@@ -321,11 +324,11 @@ function App() {
                   </label>
                 </div>
               )}
-              <div className="vin-fields">
+              {comparisonEnabled && <div className="vin-fields">
                 <label htmlFor="offer-reference">Référence OEM à comparer (facultatif)
                   <input id="offer-reference" value={reference} onChange={(event) => { setReference(event.target.value); setSubmittedSearch(''); }} placeholder="Ex. 231008918R — même référence pour neuf et occasion" maxLength={40} />
                 </label>
-              </div>
+              </div>}
             </form>
             <div className="input-hint">
               <span aria-hidden="true">✳</span>
@@ -439,7 +442,9 @@ function App() {
             </button>
           ))}
         </div>
-        <p className="price-note">Comparez les offres accessibles et consultez les autres marchands. Un prix hors port ne permet pas de déterminer le meilleur coût livré.</p>
+        <p className="price-note">{comparisonEnabled
+          ? 'Comparez les offres accessibles et consultez les autres marchands. Un prix hors port ne permet pas de déterminer le meilleur coût livré.'
+          : 'Consultez les prix, les frais de livraison et la disponibilité directement chez chaque marchand. La comparaison automatique des prix est désactivée.'}</p>
 
         {!submittedSearch ? (
           <div className="empty-state">
@@ -452,7 +457,7 @@ function App() {
               <span>Résultats pour</span> <strong>{submittedSearch}</strong>
               <span className="query-count">{visibleSuppliers.length} marchands</span>
             </div>
-            {offerCriteria && <OfferComparison criteria={offerCriteria} country={country} condition={condition} />}
+            {comparisonEnabled && offerCriteria && <OfferComparison criteria={offerCriteria} country={country} condition={condition} />}
             {(submittedType === 'plate' || submittedType === 'vin') && (
               <p className="privacy-note">
                 {submittedType === 'vin'

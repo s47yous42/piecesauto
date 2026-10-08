@@ -1,6 +1,6 @@
 # PieceAuto
 
-Application React + Vite pour rechercher des pièces auto chez plusieurs marchands européens. Les liens marchands fonctionnent sur GitHub Pages. La version locale en préparation ajoute un serveur Node.js lisant les annonces publiques accessibles, sans clé API, pour rapprocher les prix neuf/occasion par référence OEM. Voir [la comparaison de prix et ses limites](docs/PRICE-COMPARISON.md).
+Application React + Vite pour rechercher des pièces auto chez plusieurs marchands européens. Sur GitHub Pages, les recherches et les liens marchands sont disponibles ; le comparateur automatique est désactivé. Une version locale ajoute un serveur Node.js lisant les annonces publiques accessibles, sans clé API, pour rapprocher les prix neuf/occasion par référence OEM. Voir [la comparaison de prix et ses limites](docs/PRICE-COMPARISON.md).
 
 ## Développement local
 
@@ -18,9 +18,11 @@ npm run build
 npm run preview
 ```
 
-Pour utiliser le comparateur local après compilation : `npm start`, puis ouvrir http://127.0.0.1:4173. Il est prévu pour la livraison à **69390 Vernaison, France**. Le comparateur ne fonctionne pas sur GitHub Pages sans hébergement serveur supplémentaire.
+Pour utiliser le comparateur local : `npm run build:comparison`, puis `npm start` et ouvrir http://127.0.0.1:4173. Il est prévu pour la livraison à **69390 Vernaison, France**. Le comparateur ne fonctionne pas sur GitHub Pages sans hébergement serveur supplémentaire. `npm run build` produit toujours la version statique sans comparateur.
 
-Tests avant publication : `npm test`, `npm run build`, `npm run test:e2e`, puis `npm run test:live`. Les tests navigateur utilisent Chrome installé sous Windows ; sur Linux, installer Chromium avec `npx playwright install --with-deps chromium`. Le workflow GitHub Pages exécute ces vérifications avant de déployer. Les sources inaccessibles ou l’absence d’un prix livré valide bloquent le contrôle réel et la publication.
+Tests avant publication statique : `npm test`, `npm run build`, puis `npm run test:e2e`. Ces tests vérifient notamment que les quatre modes de recherche conservent les liens marchands sans appeler le service de comparaison. Les tests navigateur utilisent Chrome installé sous Windows ; sur Linux, installer Chromium avec `npx playwright install --with-deps chromium`. Le workflow GitHub Pages exécute ces vérifications avant de déployer.
+
+Pour vérifier le comparateur local : `npm run build:comparison`, `npm run test:e2e:comparison`, puis `npm run test:live`. Les sources inaccessibles ou l’absence d’un prix livré valide bloquent sa validation pour une publication avec serveur. Ce contrôle réel reste obligatoire pour le comparateur, mais ne bloque plus le site statique où il est désactivé.
 
 ## Déploiement GitHub Pages
 
